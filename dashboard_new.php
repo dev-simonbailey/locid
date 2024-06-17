@@ -6,16 +6,17 @@ $db = new SQLite3($database);
 $todaysDate = date("Y-m-d");
 switch (htmlspecialchars($_POST['f'])) {
     case 'Log-Out':
-        //session_unset();
-        header('Location: index.php');
+        session_unset();
+        header('Location: dashboard.php');
         break;
     case 'Log-In':
-        $username = htmlspecialchars($_POST['username']);
-        $password = htmlspecialchars($_POST['password']);
+        $username = trim(htmlspecialchars($_POST['username']));
+        $password = trim(htmlspecialchars($_POST['password']));
         $loginSQL = "SELECT depot FROM account WHERE username='".$username."' AND password='".$password."'";
         $loginRet = $db->query($loginSQL);
         while( $loginRow = $loginRet->fetchArray( SQLITE3_ASSOC ) ) {
             $_SESSION['depot'] = $loginRow['depot'];
+            $_SESSION['user'] = $username;
         }
     default:
         # code...
@@ -46,7 +47,6 @@ $statusRet = $db->query($statusSQL);
 /* Get the depot data */
 $depotSQL = "SELECT depot FROM depots";
 $depotRet = $db->query($depotSQL);
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,11 +62,16 @@ $depotRet = $db->query($depotSQL);
     <style>
         body {
             font-family:arial;
+            background-color: grey;
         }
         .sticky {
             position: -webkit-sticky; /* Safari */
             position: sticky;
             top: 0;
+        }
+        .bluebar {
+            background-color: #00529C;
+            color:white;
         }
         .ready {
             background-color:burlywood;
@@ -126,11 +131,13 @@ $depotRet = $db->query($depotSQL);
             background-color: #00529C;
             color: white;
         }
+        /*
         #deliveries tr:hover {
             background-color: blue;
             color:white;
             cursor: pointer;
         }
+        */
         #deliveries td, #deliveries th {
             border: 1px solid #FFF;
             padding: 8px;
@@ -308,6 +315,7 @@ $depotRet = $db->query($depotSQL);
         <form name='add-new-delivery' action='actions/add_delivery.php' method='POST'>
             <input type='hidden' name='redirect' value='adminDashboard'>
             <input type='hidden' name='driver' value=''>
+            <input type='hidden' name='add-new-createdby' value='<?php echo $_SESSION['user'];?>'>
 
             <table width='80%'>
                 <tr><th><h2>Add New Job</h2></th></tr>
@@ -482,102 +490,126 @@ $depotRet = $db->query($depotSQL);
 <div class='sticky'>
 <table id='header' cellspacing='0'>
         <tr>
-            <th colspan='4' style='text-align:center'>
+            <th style='width:33%;text-align:center'>
                 <button class='settingsButton' onclick='javascript:showAddJobModal()' title='Add Job'><i class="fa-solid fa-plus"></i></button>
                 <a href='dashboard.php'><button class='settingsButton' title='Refresh Data'><i class="fa-solid fa-arrows-rotate"></i></button></a>
                 <a href='report.php'><button class='settingsButton' title='View Completed Reports'><i class="fa-solid fa-chart-bar"></i></button></a>
                 <button class='settingsButton' onclick='javascript:showAccountModal()' title='Login / Log Out'><i class="fa-solid fa-user"></i></button>
             </th>
-            <th colspan='6' style='text-align:center'>
-                <h2>North West Trucks | Dashboard</h2>
+            <th style='width:33%;text-align:center'>
+                    <?php
+                        if($_SESSION['user'] != ""){
+                            echo "<h2>North West Trucks | Dashboard (".$_SESSION['user'].")</h2>";
+                        } else {
+                            echo "<h2>North West Trucks | Dashboard (LOGGED OUT)</h2>";
+                        }
+                ?>
             </th>
-            <th colspan='2' style='text-align:center'>
+            <th style='width:33%;text-align:center'>
                 Jobs Total: <button style='height:32px;width:32px;border-radius:50%;border:1px solid white'><strong><?php echo $jobCount; ?></strong></button>
                 &nbsp;&nbsp;&nbsp;
                 Last Updated at: <span id="updated-at"></span>
             </th>
         </tr>
+        <tr>
+            <th style='text-align:center;'>In Pick</th>
+            <th style='text-align:center;'>On Route</th>
+            <th style='text-align:center;'>Completed</th>
+        </tr>
     </table>
 </div>
+<div style='height:100%;width:100%;background-color:grey;overflow:auto'>
     <table id='deliveries' cellspacing='0'>
-        <tr>
-            <th>ID</th>
-            <th>Depot</th>
-            <th>Type</th>
-            <th>Name</th>
-            <th>Location</th>
-            <th>Doc ID</th>
-            <th>Added</th>
-            <th>Driver</th>
-            <th>Assigned</th>
-            <th>Status</th>
-            <th>Completed</th>
-            <th>Note</th>
-        </tr>
-        <?php
-            while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
-                $addedDateTime = date_format(date_create($mainRow['added']),"H:i:s d/m/Y");
-                if($mainRow['assigned'] != ''){
-                    $assignedDateTime = date_format(date_create($mainRow['assigned']),"H:i:s d/m/Y");
-                } else {
-                    $assignedDateTime = '';
-                }
-                if($mainRow['completed'] != ''){
-                    $completedDateTime = date_format(date_create($mainRow['completed']),"H:i:s d/m/Y");
-                } else {
-                    $completedDateTime = '';
-                }
-                if($mainRow['status'] == "Return to Base") {
-                    $date1 = new DateTime($mainRow['added']);
-                    $date2 = new DateTime($todaysDate);
-                    if($date1 >= $date2) {
-                        echo "<tr class='returntobase'>";
-                        echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$mainRow['assigned'].")</td>";
-                        echo "</tr>";
+        <tr style='background-color:#808080'>
+            <td style='height:100%;width:33%;padding-top:10px;vertical-align:top;'>
+                    <?php
+                    while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
+                        $addedDateTime = date_format(date_create($mainRow['added']),"H:i:s d/m/Y");
+                        if($mainRow['assigned'] != ''){
+                            $assignedDateTime = date_format(date_create($mainRow['assigned']),"H:i:s d/m/Y");
+                        } else {
+                            $assignedDateTime = '';
+                        }
+                        if($mainRow['status'] == "To Be Picked" || $mainRow['status'] == "Ready" || $mainRow['status'] == "Manual"){
+                            echo "<div style='background-color:white;padding:10px;margin-bottom:10px;'>";
+                            echo "<div onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options' style='cursor:pointer;'>";
+                            echo "<div class='bluebar' style='width:97%;padding:10px;'><strong>".$mainRow['company']."</strong> in <strong>" .$mainRow['location']."</strong></div>";
+                            echo "<div>Job ID: <strong>".strtoupper($mainRow['id'])."</strong></div>";
+                            echo "<div>Created By: <strong>".strtoupper($mainRow['createdby'])."</strong></div>";
+                            echo "<div>Job Type: <strong>".strtoupper($mainRow['type'])."</strong></div>";
+                            echo "<div>Added at: <strong>".$addedDateTime."</strong></div>";
+                            echo "<div>Document No.: <strong>".$mainRow['docid']."</strong></div>";
+                            echo "<div>Assigned to: <strong>".$mainRow['driver']."</strong></div>";
+                            echo "<div>Assigned at: <strong>".$assignedDateTime."</strong></div>";
+                            echo "<div>Status: <strong>".$mainRow['status']."</strong></div>";
+                            echo "<div><strong>Note:</strong><br />".$mainRow['note']."</div>";
+                            echo "</div>";
+                            echo "</div>";
+                        }
                     }
-                } else {
-                    switch ($mainRow['status']){
-                        case "On Van":
-                            echo "<tr class='outfordelivery' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
-                            break;
-                        case "Completed":
-                            //echo "<tr class='completed' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
-                            echo "<tr class='completed'>";
-                            break;
-                        case "Ready":
-                        case "Manual":
-                            echo "<tr class='ready' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
-                            break;
-                        case "To Be Picked":
-                            echo "<tr class='tobepicked' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
-                            break;
-                        case "To Be Collected":
-                            echo "<tr class='ready' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
-                            break;
-                        case "Awaiting Parts":
-                            echo "<tr class='awaitingparts' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
-                            break;
-                        default:
-                        echo "<tr>";
-                    }
-                echo "<td>".$mainRow['id']."</td>";
-                echo "<td>".$mainRow['depot']."</td>";
-                echo "<td>".$mainRow['type']."</td>";
-                echo "<td>".$mainRow['company']."</td>";
-                echo "<td>".$mainRow['location']."</td>";
-                echo "<td>".$mainRow['docid']."</td>";
-                echo "<td>".$addedDateTime."</td>";
-                echo "<td>".$mainRow['driver']."</td>";
-                echo "<td>".$assignedDateTime."</td>";
-                echo "<td>".$mainRow['status']."</td>";
-                echo "<td>".$completedDateTime."</td>";
-                echo "<td>".$mainRow['note']."</td>";
-                echo "</tr>";
-                }
+                    ?>
 
-            }
-        ?>
+            </td>
+            <td style='height:100%;width:33%;padding-top:10px;vertical-align:top;'>
+                <?php
+                    while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
+                        $addedDateTime = date_format(date_create($mainRow['added']),"H:i:s d/m/Y");
+                        if($mainRow['assigned'] != ''){
+                            $assignedDateTime = date_format(date_create($mainRow['assigned']),"H:i:s d/m/Y");
+                        } else {
+                            $assignedDateTime = '';
+                        }
+                        if($mainRow['status'] == "On Van"){
+                            echo "<div style='background-color:white;padding:10px;margin-bottom:10px;'>";
+                            echo "<div onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options' style='cursor:pointer'>";
+                            echo "<div class='bluebar' style='width:97%;padding:10px;'><strong>".$mainRow['company']."</strong> in <strong>" .$mainRow['location']."</strong></div>";
+                            echo "<div>Job ID: <strong>".strtoupper($mainRow['id'])."</strong></div>";
+                            echo "<div>Created By: <strong>".strtoupper($mainRow['createdby'])."</strong></div>";
+                            echo "<div>Job Type: <strong>".strtoupper($mainRow['type'])."</strong></div>";
+                            echo "<div>Added at: <strong>".$addedDateTime."</strong></div>";
+                            echo "<div>Document No.: <strong>".$mainRow['docid']."</strong></div>";
+                            echo "<div>Assigned to: <strong>".$mainRow['driver']."</strong></div>";
+                            echo "<div>Assigned at: <strong>".$assignedDateTime."</strong></div>";
+                            echo "<div>Status: <strong>".$mainRow['status']."</strong></div>";
+                            echo "<div><strong>Note:</strong><br />".$mainRow['note']."</div>";
+                            echo "</div>";
+                            echo "</div>";
+                        }
+                    }
+                    ?>
+            </td>
+            <td style='height:100%;width:33%;padding-top:10px;vertical-align:top;'>
+                <?php
+                    while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
+                        $addedDateTime = date_format(date_create($mainRow['added']),"H:i:s d/m/Y");
+                        if($mainRow['assigned'] != ''){
+                            $assignedDateTime = date_format(date_create($mainRow['assigned']),"H:i:s d/m/Y");
+                        } else {
+                            $assignedDateTime = '';
+                        }
+                        if($mainRow['status'] == "Completed"){
+                            echo "<div style='background-color:white;padding:10px;margin-bottom:10px;'>";
+                            echo "<div class='bluebar' style='width:97%;padding:10px;'><strong>".$mainRow['company']."</strong> in <strong>" .$mainRow['location']."</strong></div>";
+                            echo "<div style='color:grey'>Job ID: <strong>".strtoupper($mainRow['id'])."</strong></div>";
+                            echo "<div style='color:grey'>Created By: <strong>".strtoupper($mainRow['createdby'])."</strong></div>";
+                            echo "<div style='color:grey'>Job Type: <strong>".strtoupper($mainRow['type'])."</strong></div>";
+                            echo "<div style='color:grey'>Added at: <strong>".$addedDateTime."</strong></div>";
+                            echo "<div style='color:grey'>Document No.: <strong>".$mainRow['docid']."</strong></div>";
+                            echo "<div style='color:grey'>Assigned to: <strong>".$mainRow['driver']."</strong></div>";
+                            echo "<div style='color:grey'>Assigned at: <strong>".$assignedDateTime."</strong></div>";
+                            echo "<div style='color:grey'>Status: <strong>".$mainRow['status']."</strong></div>";
+                            echo "<div style='color:grey'><strong>Note:</strong><br />".$mainRow['note']."</div>";
+                            echo "<div style='color:grey'>Signed By: <strong>".$mainRow['sign_name']."</strong></div>";
+                            echo "<div style='color:grey'><img style='width:150px;height:75px;' src='signatures/".$mainRow['signature']."'>'</div>";
+                            echo "</div>";
+                            echo "</div>";
+                        }
+                    }
+                    ?>
+            </td>
+        </tr>
     </table>
+</div>
 <!-- END MAIN TABLE -->
 <script>
     const d = new Date();
@@ -712,7 +744,6 @@ $depotRet = $db->query($depotSQL);
         autoRefresh = true;
         console.log("Auto Refresh Active");
     }
-    window.scrollTo(0,document.body.scrollHeight);
 </script>
 </body>
 </html>
