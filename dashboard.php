@@ -6,7 +6,7 @@ $db = new SQLite3($database);
 $todaysDate = date("Y-m-d");
 switch (htmlspecialchars($_POST['f'])) {
     case 'Log-Out':
-        //session_unset();
+        session_unset();
         header('Location: index.php');
         break;
     case 'Log-In':
@@ -16,6 +16,7 @@ switch (htmlspecialchars($_POST['f'])) {
         $loginRet = $db->query($loginSQL);
         while( $loginRow = $loginRet->fetchArray( SQLITE3_ASSOC ) ) {
             $_SESSION['depot'] = $loginRow['depot'];
+            $_SESSION['user'] = $username;
         }
     default:
         # code...
@@ -513,9 +514,10 @@ $depotRet = $db->query($depotSQL);
             if($mainRow['status'] == "Return to Base") {
                 $date1 = new DateTime($mainRow['added']);
                 $date2 = new DateTime($todaysDate);
+                $returnDate = date_format(date_create($mainRow['assigned']),"H:i:s d/m/Y");
                 if($date1 >= $date2) {
                     echo "<tr class='returntobase'>";
-                    echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$mainRow['assigned'].")</td>";
+                    echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$returnDate.")</td>";
                     echo "</tr>";
                 }
             }
@@ -527,6 +529,7 @@ $depotRet = $db->query($depotSQL);
         <tr>
             <th>ID</th>
             <th>Depot</th>
+            <th>Created By</th>
             <th>Type</th>
             <th>Name</th>
             <th>Location</th>
@@ -590,6 +593,7 @@ $depotRet = $db->query($depotSQL);
                 if($mainRow['status'] != "Return to Base"){
                     echo "<td>".$mainRow['id']."</td>";
                     echo "<td>".$mainRow['depot']."</td>";
+                    echo "<td>".$mainRow['createdby']."</td>";
                     echo "<td>".$mainRow['type']."</td>";
                     echo "<td>".$mainRow['company']."</td>";
                     echo "<td>".$mainRow['location']."</td>";
