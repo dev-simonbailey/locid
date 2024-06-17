@@ -507,6 +507,21 @@ $depotRet = $db->query($depotSQL);
             </th>
         </tr>
     </table>
+    <table id='header' cellspacing='0'>
+        <?php
+        while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
+            if($mainRow['status'] == "Return to Base") {
+                $date1 = new DateTime($mainRow['added']);
+                $date2 = new DateTime($todaysDate);
+                if($date1 >= $date2) {
+                    echo "<tr class='returntobase'>";
+                    echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$mainRow['assigned'].")</td>";
+                    echo "</tr>";
+                }
+            }
+        }
+        ?>
+    </table>
 </div>
     <table id='deliveries' cellspacing='0'>
         <tr>
@@ -536,15 +551,15 @@ $depotRet = $db->query($depotSQL);
                 } else {
                     $completedDateTime = '';
                 }
-                if($mainRow['status'] == "Return to Base") {
-                    $date1 = new DateTime($mainRow['added']);
-                    $date2 = new DateTime($todaysDate);
-                    if($date1 >= $date2) {
-                        echo "<tr class='returntobase'>";
-                        echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$mainRow['assigned'].")</td>";
-                        echo "</tr>";
-                    }
-                } else {
+ //               if($mainRow['status'] == "Return to Base") {
+ //                   $date1 = new DateTime($mainRow['added']);
+ //                   $date2 = new DateTime($todaysDate);
+ //                   if($date1 >= $date2) {
+ //                       echo "<tr class='returntobase'>";
+ //                       echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$mainRow['assigned'].")</td>";
+ //                       echo "</tr>";
+ //                   }
+ //               } else {
                     switch ($mainRow['status']){
                         case "On Van":
                             echo "<tr class='outfordelivery' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
@@ -566,23 +581,29 @@ $depotRet = $db->query($depotSQL);
                         case "Awaiting Parts":
                             echo "<tr class='awaitingparts' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
                             break;
+                        case "Return to Base":
+                            break;
                         default:
+                            break;
                         echo "<tr>";
                     }
-                echo "<td>".$mainRow['id']."</td>";
-                echo "<td>".$mainRow['depot']."</td>";
-                echo "<td>".$mainRow['type']."</td>";
-                echo "<td>".$mainRow['company']."</td>";
-                echo "<td>".$mainRow['location']."</td>";
-                echo "<td>".$mainRow['docid']."</td>";
-                echo "<td>".$addedDateTime."</td>";
-                echo "<td>".$mainRow['driver']."</td>";
-                echo "<td>".$assignedDateTime."</td>";
-                echo "<td>".$mainRow['status']."</td>";
-                echo "<td>".$completedDateTime."</td>";
-                echo "<td>".$mainRow['note']."</td>";
-                echo "</tr>";
+                if($mainRow['status'] != "Return to Base"){
+                    echo "<td>".$mainRow['id']."</td>";
+                    echo "<td>".$mainRow['depot']."</td>";
+                    echo "<td>".$mainRow['type']."</td>";
+                    echo "<td>".$mainRow['company']."</td>";
+                    echo "<td>".$mainRow['location']."</td>";
+                    echo "<td>".$mainRow['docid']."</td>";
+                    echo "<td>".$addedDateTime."</td>";
+                    echo "<td>".$mainRow['driver']."</td>";
+                    echo "<td>".$assignedDateTime."</td>";
+                    echo "<td>".$mainRow['status']."</td>";
+                    echo "<td>".$completedDateTime."</td>";
+                    echo "<td>".$mainRow['note']."</td>";
+                    echo "</tr>";
                 }
+
+ //               }
 
             }
         ?>
