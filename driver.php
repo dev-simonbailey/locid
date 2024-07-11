@@ -174,7 +174,7 @@ $activeJobCount = 0;
             padding: 20px;
             border: 1px solid #888;
             border-radius: 10px;
-            width: 90%;
+            width: 100%;
         }
         .modalClose {
             color: #aaa;
@@ -487,7 +487,7 @@ $activeJobCount = 0;
 <!-- END ACCOUNT MODAL -->
 <!-- START MAIN TABLE -->
 <div class='sticky'>
-<table id='header' cellspacing='0'>
+    <table id='header' cellspacing='0'>
         <tr>
             <th colspan='1' style='text-align:center'>
                     <p style='font-size: 24px'>

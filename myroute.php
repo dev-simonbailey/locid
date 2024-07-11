@@ -128,7 +128,7 @@ $activeJobCount = 0;
             cursor: pointer;
         }
         .settingsButton {
-            width:100%;
+            width:48%;
             height:64px;
             background-color: #00529C;
             color:white;
@@ -236,14 +236,15 @@ $activeJobCount = 0;
 <div id="optionsModal" class="modal">
     <div class="modal-content">
         <span id='optionsClose' class="modalClose">&times;</span>
-        <p id='optionsModalText'></p>
+        <p id='optionsModalText' style='word-wrap: break-word;'></p>
         <div class="tab">
-            <button class="tablinks" onclick="openOptionsTab(event, 'completeJobTab')"id="defaultOpen">Complete Job</button>
+            <button class="tablinks" onclick="openOptionsTab(event, 'completeJobTab')" id="defaultOpen">Complete Job</button>
+            <button class="tablinks" onclick="openOptionsTab(event, 'linkJobTab')">Link Jobs</button>
         </div>
         <div id="completeJobTab" class="tabcontent">
             <form id="signature-form" action="signature.php" method="post">
                 <input type='hidden' name='redirect' value='adminDashboard'>
-                <p><input type='hidden' id='assignJob' name='jobID' /></p>
+                <p><input type='hidden' id='assignJob' name='jobID'/></p>
                 <center>
                     <table style='background-color:white;border:none'>
                         <tr style='border:none'>
@@ -279,35 +280,72 @@ $activeJobCount = 0;
                 <p><button class='actionJob' id="clear">Clear</button></p>
             </form>
         </div>
+        <div id="linkJobTab" class="tabcontent">
+            <br />
+                <table cellspacing="0" width="100%">
+                    <tr style='background-color: blue;color:white'>
+                        <td>
+                        </td>
+                        <td>
+                           Job ID
+                        </td>
+                        <td>
+                            Company
+                        </td>
+                        <td>
+                            Location
+                        </td>
+                    </tr>
+                <?php
+                    while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
+                        $addedDateTime = date_format(date_create($mainRow['added']),"H:i:s d/m/Y");
+                        if($mainRow['assigned'] != ''){
+                            $assignedDateTime = date_format(date_create($mainRow['assigned']),"H:i:s d/m/Y");
+                        } else {
+                            $assignedDateTime = '';
+                        }
+                        if($mainRow['status'] != "Return to Base"){
+                            echo "<tr>";
+                            echo "<td><input onClick = 'getCheckedBoxes(\"linkjob\");' name='linkjob' type='checkbox' value='".$mainRow['id']."' style='height:32px;width:32px;'></td>";
+                            echo "<td style='min-height:72px'><strong>".$mainRow['id']."</strong></td>";
+                            echo "<td><strong>".$mainRow['company']."</strong></td>";
+                            echo "<td><strong>".$mainRow['location']."</strong></td>";
+                            echo "</tr>";
+                        }
+                    }
+                ?>
+            </table>
+        </div>
     </div>
 </div>
 <!-- END OPTION MODAL -->
 <!-- START MAIN TABLE -->
 <div class='sticky'>
-    <table id='deliveries' cellspacing='0'>
+    <table id='header' cellspacing='0'>
         <tr>
-            <th colspan='6' style='text-align:center'>
+            <th colspan='1' style='text-align:center'>
                     <p style='font-size: 24px'>
                     <?php
-                        echo $_SESSION['driver'] . " - Van";
+                        echo $_SESSION['driver'] . " - Home";
                     ?>
                     </p>
             </th>
         </tr>
         <tr>
-            <th colspan='6' style='background-color: white;color: black'>
-                <a href='driver.php'><button class='settingsButton'><i class="fa-solid fa-house"></i></button></a>
-                <form name='returnTobase' action='actions/return_to_base.php' method='POST'>
-                <input type='hidden' name='redirect' value='driverDashboard'>
-                <input type='hidden' name='rtb-depot' value='<?php echo $_SESSION['depot'];?>'>
-                <input type='hidden' name='rtb-driver' value='<?php echo $_SESSION['driver'];?>'>
-                <p><button class='settingsButton' type='submit' value='Update Status' ><i class="fa-solid fa-plane-arrival"></i></button></p>
-            </form>
-                <a href='myroute.php'><button class='settingsButton'><i class="fa-solid fa-arrows-rotate"></i></button></a>
+            <th colspan='1' style='background-color: white;color: black;text-align:center'>
+                <a href='driver.php'><button class='settingsButton' title='Home'><i class="fa-solid fa-house"></i></button></a>
+                <form name='returnTobase' action='actions/return_to_base.php' method='POST' style='display: inline;'>
+                    <input type='hidden' name='redirect' value='driverDashboard'>
+                    <input type='hidden' name='rtb-depot' value='<?php echo $_SESSION['depot'];?>'>
+                    <input type='hidden' name='rtb-driver' value='<?php echo $_SESSION['driver'];?>'>
+                    <button class='settingsButton' type='submit' value='Update Status' title='Return to Base'><i class="fa-solid fa-plane-arrival"></i></button>
+                </form>
+                <a href='https://forms.office.com/Pages/ResponsePage.aspx?id=D0hBLE3UF0ubd707g7wAczhoE_Mls9hAkkE0Oxu8-N9UOTFKUEdLVE1SQjBaNkxUVjFHM0VJRk5WNyQlQCN0PWcu' target='_blank'><button class='settingsButton' title='Vehicle Check'><i class="fa-solid fa-wrench"></i></button></a>
+                <a href='myroute.php'><button class='settingsButton' title='Reload'><i class="fa-solid fa-arrows-rotate"></i></button></a>
             </th>
         </tr>
         <tr>
-            <th colspan='6' style='background-color: white;color: black;text-align:right'>
+            <th colspan='1' style='background-color: white;color: black;text-align:right'>
                     <i class="fa-solid fa-arrows-rotate"></i> <span id="updated-at"><?php echo $refreshDate;?></span>
             </th>
         </tr>
@@ -418,6 +456,32 @@ $activeJobCount = 0;
             echo "document.getElementById('updated-at').innerHTML = 'Logged Out';";
         }
     ?>
+
+    // Pass the checkbox name to the function
+    function getCheckedBoxes(chkboxName) {
+    var checkboxes = document.getElementsByName(chkboxName);
+    var optionsModalText = document.getElementById("optionsModalText");
+    var checkboxesChecked = [];
+    var jobIdString = "";
+    // loop over them all
+    for (var i=0; i<checkboxes.length; i++) {
+        // And stick the checked ones onto an array...
+        if (checkboxes[i].checked) {
+            checkboxesChecked.push(checkboxes[i]);
+        }
+    }
+    for (var i = 0; i < checkboxesChecked.length; i++) {
+        jobIdString = jobIdString + checkboxesChecked[i].value + "," ;
+    }
+    if (jobIdString.charAt(jobIdString.length - 1) === ',') {
+        jobIdString = jobIdString.substring(0, jobIdString.length - 1);
+        }
+    console.log(jobIdString);
+    document.getElementById("assignJob").value = jobIdString;
+    optionsModalText.innerText = "You are completing job number(s) "+jobIdString;
+    
+    }
+
     // OPTIONS MODAL
     var optionsModal = document.getElementById("optionsModal");
     var optionsModalText = document.getElementById("optionsModalText");
@@ -426,6 +490,17 @@ $activeJobCount = 0;
     var updateJob = document.getElementById('updateJob');
     var optionsSpan = document.getElementById("optionsClose");
     function showOptionsModal(id) {
+        let checkboxes = document.querySelectorAll('input[name="linkjob"]');
+        checkboxes.forEach(box => {
+           if(box.value == id){
+                console.log(box.value);
+                box.checked = true;
+                box.disabled = true;
+            } else {
+                box.checked = false;
+                box.disabled = false;
+            }
+        });
         optionsModalText.innerText = "You are completing job number "+id;
         assignJob.value = id;
         optionsModal.style.display = "block";

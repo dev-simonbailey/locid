@@ -177,7 +177,7 @@ $depotRet = $db->query($depotSQL);
             padding: 20px;
             border: 1px solid #888;
             border-radius: 10px;
-            width: 400px;
+            width: 500px;
         }
         .modalClose {
             color: #aaa;
@@ -258,6 +258,7 @@ $depotRet = $db->query($depotSQL);
             <button class="tablinks" onclick="openOptionsTab(event, 'cancelJobTab')" id="defaultOpen">Cancel Job</button>
             <button class="tablinks" onclick="openOptionsTab(event, 'assignJobTab')">Assign Driver</button>
             <button class="tablinks" onclick="openOptionsTab(event, 'updateJobTab')">Update Status</button>
+            <button class="tablinks" onclick="openOptionsTab(event, 'updateJobIDTab')">Update Doc ID</button>
         </div>
         <!-- TAB CONTENT -->
         <div id="cancelJobTab" class="tabcontent">
@@ -282,7 +283,7 @@ $depotRet = $db->query($depotSQL);
             </form>
         </div>
         <div id="updateJobTab" class="tabcontent">
-            <h3>Update Status</h3>
+            <h2>Update Status</h2>
             <form name='updateStatus' action='actions/update_status.php' method='POST'>
                 <input type='hidden' name='redirect' value='adminDashboard'>
                 <p><input type='hidden' id='updateJob' name='jobID' /></p>
@@ -297,6 +298,16 @@ $depotRet = $db->query($depotSQL);
                         ?>
                     </select>    
                 <p><input class='actionJob' type='submit' value='Update Status' /></p>
+            </form>
+        </div>
+        <div id="updateJobIDTab" class="tabcontent">
+            <h2>Update Doc ID</h2>
+            <form name='updateStatus' action='actions/update_delivery.php' method='POST'>
+            <input type='hidden' name='redirect' value='adminDashboard'>
+                <p><input type='hidden' id='updateDocId' name='jobID' /></p>
+                <p>Document ID</p>
+                <p><input type='text' name='updateDocID'  style='width:200px;height:32px;font-size:24px;'/></p>
+                <p><input class='actionJob' type='submit' value='Update Doc ID' /></p>
             </form>
         </div>
     </div>
@@ -484,7 +495,7 @@ $depotRet = $db->query($depotSQL);
 <!-- END ACCOUNT MODAL -->
 <!-- START MAIN TABLE -->
 <div class='sticky'>
-<table id='header' cellspacing='0'>
+    <table id='header' cellspacing='0'>
         <tr>
             <th colspan='4' style='text-align:center'>
                 <button class='settingsButton' onclick='javascript:showAddJobModal()' title='Add Job'><i class="fa-solid fa-plus"></i></button>
@@ -554,15 +565,6 @@ $depotRet = $db->query($depotSQL);
                 } else {
                     $completedDateTime = '';
                 }
- //               if($mainRow['status'] == "Return to Base") {
- //                   $date1 = new DateTime($mainRow['added']);
- //                   $date2 = new DateTime($todaysDate);
- //                   if($date1 >= $date2) {
- //                       echo "<tr class='returntobase'>";
- //                       echo "<td colspan='12'>".$mainRow['driver']." is returning to base (".$mainRow['assigned'].")</td>";
- //                       echo "</tr>";
- //                   }
- //               } else {
                     switch ($mainRow['status']){
                         case "On Van":
                             echo "<tr class='outfordelivery' onclick='javascript:showOptionsModal(".$mainRow['id'].");' title='Click for options'>";
@@ -606,9 +608,6 @@ $depotRet = $db->query($depotSQL);
                     echo "<td>".$mainRow['note']."</td>";
                     echo "</tr>";
                 }
-
- //               }
-
             }
         ?>
     </table>
@@ -674,12 +673,14 @@ $depotRet = $db->query($depotSQL);
     var cancelJob = document.getElementById('cancelJob');
     var assignJob = document.getElementById('assignJob');
     var updateJob = document.getElementById('updateJob');
+    var updateDocId = document.getElementById('updateDocId');
     var optionsSpan = document.getElementById("optionsClose");
     function showOptionsModal(id) {
         optionsModalText.innerText = "You are actioning job number "+id;
         cancelJob.innerHTML ="<button class='actionJob' onclick='javascript:showCancel("+id+");'>Cancel Job "+id+"</button>";
         assignJob.value = id;
         updateJob.value = id;
+        updateDocId.value = id;
         optionsModal.style.display = "block";
         autoRefresh = false;
         console.log("Auto Refresh Paused");

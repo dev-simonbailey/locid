@@ -21,27 +21,35 @@ switch (htmlspecialchars($_POST['f'])) {
             $eD = $endDate->format('Y-m-d');
         }
         $mainSQL = "SELECT * FROM deliveries WHERE (completed BETWEEN '".$sD." 00:00:00' AND '".$eD." 23:59:59') AND (depot = '".$_SESSION['depot']."' AND depot !='') ORDER BY completed DESC";
+        $countSQL = "SELECT COUNT(*) FROM deliveries WHERE (completed BETWEEN '".$sD." 00:00:00' AND '".$eD." 23:59:59') AND (depot = '".$_SESSION['depot']."' AND depot !='') ORDER BY completed DESC";
         break;
     case 'byCustomer':
         $customer = htmlspecialchars($_POST['customer']);
         if($customer == "NONE"){
             $mainSQL = "SELECT * FROM deliveries WHERE (depot = '".$_SESSION['depot']."' AND depot !='') AND status = 'Completed' ORDER BY added DESC";
+            $countSQL = "SELECT COUNT(*) FROM deliveries WHERE (depot = '".$_SESSION['depot']."' AND depot !='') AND status = 'Completed' ORDER BY added DESC";
         } else {
             $mainSQL = "SELECT * FROM deliveries WHERE (company = '".$customer."') AND status = 'Completed' ORDER BY added DESC";
+            $countSQL = "SELECT COUNT(*) FROM deliveries WHERE (company = '".$customer."') AND status = 'Completed' ORDER BY added DESC";
         }
         break;
     case 'byDriver':
         $driver = htmlspecialchars($_POST['driver']);
         if($driver == "NONE"){
             $mainSQL = "SELECT * FROM deliveries WHERE (depot = '".$_SESSION['depot']."' AND depot !='') AND status = 'Completed' ORDER BY added DESC";
+            $countSQL = "SELECT COUNT(*) FROM deliveries WHERE (depot = '".$_SESSION['depot']."' AND depot !='') AND status = 'Completed' ORDER BY added DESC";
         } else {
             $mainSQL = "SELECT * FROM deliveries WHERE (driver = '".$driver."') AND status = 'Completed' ORDER BY added DESC";
+            $countSQL = "SELECT COUNT(*) as count FROM deliveries WHERE (driver = '".$driver."') AND status = 'Completed' ORDER BY added DESC";
         }
         break;
     default:
         $mainSQL = "SELECT * FROM deliveries WHERE (depot = '".$_SESSION['depot']."' AND depot !='') AND status = 'Completed' ORDER BY added DESC";
+        $countSQL = "SELECT COUNT(*) FROM deliveries WHERE (depot = '".$_SESSION['depot']."' AND depot !='') AND status = 'Completed' ORDER BY added DESC";
         break;
 }
+
+$jobCount = $db->querySingle($countSQL);
 $mainRet = $db->query($mainSQL);
 /* Get the data needed from the database */
 /* Get the drivers data */
@@ -66,6 +74,33 @@ $customerRet = $db->query($customerSQL);
         body {
             font-family:arial;
             background-color:#ddd;
+        }
+        .sticky {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+        }
+        #header {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width:100%;
+            border-radius: 2px;
+        }
+        #header th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #00529C;
+            color: white;
+        }
+        #header tr:hover {
+            background-color: blue;
+            color:white;
+            cursor: pointer;
+        }
+        #header td, #header th {
+            border: 1px solid #FFF;
+            padding: 8px;
         }
         #deliveries {
             font-family: Arial, Helvetica, sans-serif;
@@ -339,61 +374,73 @@ $customerRet = $db->query($customerSQL);
 </div>
 <!-- END OPTION MODAL -->
 <!-- START MAIN TABLE -->
-    <table id='deliveries' cellspacing='0'>
+<div class='sticky'>
+    <table id='header' cellspacing='0'>
         <tr>
             <th colspan='4' style='text-align:center'>
                 <a href='dashboard.php'><button class='settingsButton' title='Return to Dashboard'><i class="fa-solid fa-house"></i></button></a>
                 <a href='report.php'><button class='settingsButton' title='Reset All Filters'><i class="fa-solid fa-arrows-rotate"></i></button></a>
                 <button class='settingsButton' onclick='javascript:showOptionsModal()' title='Filter Results'><i class="fa-solid fa-filter"></i></button>
             </th>
-            <th colspan='7' style='text-align:center'>
-                <h2>North West Trucks | Report</h2>
+            <th colspan='6' style='text-align:center'>
+            <?php
+                    if($_SESSION['user'] != ""){
+                        echo "<h2>North West Trucks | Report (".$_SESSION['user'].")</h2>";
+                    } else {
+                        echo "<h2>North West Trucks | Report (LOGGED OUT)</h2>";
+                    }
+                ?>
             </th>
-            <th colspan='2' style='text-align:right'>
+            <th colspan='2' style='text-align:center'>
+                Jobs Total: <button style='height:32px;width:32px;border-radius:50%;border:1px solid white'><strong><?php echo $jobCount; ?></strong></button>
+                &nbsp;&nbsp;&nbsp;
                 Last Updated at: <span id="updated-at"></span>
             </th>
         </tr>
-        <tr>
-            <th>ID</th>
-            <th>Depot</th>
-            <th>Type</th>
-            <th>Company</th>
-            <th>Location</th>
-            <th>Doc ID</th>
-            <th>Added</th>
-            <th>Driver</th>
-            <th>Assigned</th>
-            <th>Status</th>
-            <th>Completed</th>
-            <th>Signed By</th>
-            <th>Signature</th>
-        </tr>
-        <?php
-            while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
-                if($mainRow['status'] != "Return to Base"){
-                    echo "<tr>";
-                    echo "<td>".$mainRow['id']."</td>";
-                    echo "<td>".$mainRow['depot']."</td>";
-                    echo "<td>".$mainRow['type']."</td>";
-                    echo "<td>".$mainRow['company']."</td>";
-                    echo "<td>".$mainRow['location']."</td>";
-                    echo "<td>".$mainRow['docid']."</td>";
-                    echo "<td>".$mainRow['added']."</td>";
-                    echo "<td>".$mainRow['driver']."</td>";
-                    echo "<td>".$mainRow['assigned']."</td>";
-                    echo "<td>".$mainRow['status']."</td>";
-                    echo "<td>".$mainRow['completed']."</td>";
-                    echo "<td>".$mainRow['sign_name']."</td>";
-                    if($mainRow['signature'] != ""){
-                        echo "<td><img src='signatures/".$mainRow['signature']."' style='width:100px;height:50px;'/></td>";
-                    } else {
-                        echo "<td>No Signature</td>";
-                    }
-                    echo "</tr>";
-                }
-            }
-        ?>
     </table>
+</div>
+<table id='deliveries' cellspacing='0'>
+    <tr>
+        <th>ID</th>
+        <th>Depot</th>
+        <th>Type</th>
+        <th>Company</th>
+        <th>Location</th>
+        <th>Doc ID</th>
+        <th>Added</th>
+        <th>Driver</th>
+        <th>Assigned</th>
+        <th>Status</th>
+        <th>Completed</th>
+        <th>Signed By</th>
+        <th>Signature</th>
+    </tr>
+    <?php
+        while( $mainRow = $mainRet->fetchArray( SQLITE3_ASSOC ) ) {
+            if($mainRow['status'] != "Return to Base"){
+                echo "<tr>";
+                echo "<td>".$mainRow['id']."</td>";
+                echo "<td>".$mainRow['depot']."</td>";
+                echo "<td>".$mainRow['type']."</td>";
+                echo "<td>".$mainRow['company']."</td>";
+                echo "<td>".$mainRow['location']."</td>";
+                echo "<td>".$mainRow['docid']."</td>";
+                echo "<td>".$mainRow['added']."</td>";
+                echo "<td>".$mainRow['driver']."</td>";
+                echo "<td>".$mainRow['assigned']."</td>";
+                echo "<td>".$mainRow['status']."</td>";
+                echo "<td>".$mainRow['completed']."</td>";
+                echo "<td>".$mainRow['sign_name']."</td>";
+                if($mainRow['signature'] != ""){
+                    echo "<td><img src='signatures/".$mainRow['signature']."' style='width:100px;height:50px;'/></td>";
+                } else {
+                    echo "<td>No Signature</td>";
+                }
+                echo "</tr>";
+            }
+        }
+    ?>
+</table>
 <!-- END MAIN TABLE -->
 <script>
     const d = new Date();

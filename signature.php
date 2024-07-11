@@ -28,13 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $file_path = 'signatures/'.$image_name;
 
     // Save to the db
-    $sql = "UPDATE `".$tableName."` 
-            SET 
-                `status` = '".$status."',
-                `completed` = '".$completed."',
-                `sign_name` = '".$sign_name."',
-                `signature` = '".$image_name."'
-            WHERE `id` = ".$job_id;
+    $sql = "UPDATE `".$tableName."` SET `status` = '".$status."',`completed` = '".$completed."',`sign_name` = '".$sign_name."',`signature` = '".$image_name."' WHERE `id` IN(".$job_id.")";
 
     $ret = $db->exec($sql);
     if(!$ret){
