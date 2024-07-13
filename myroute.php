@@ -25,7 +25,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     }
 }
 /* Get the data needed from the database */
-/* Get the deliveries data  - This needs to be altered so that completed drop off the my route screen*/
+/* Get the deliveries data */
 $mainSQL = "SELECT * FROM deliveries WHERE (added > '".$todaysDate."' OR status != 'Completed') AND (depot = '".$_SESSION['depot']."' AND depot !='') AND (driver = '".$driver."') AND (status != 'Completed') ORDER BY added ASC";
 $mainRet = $db->query($mainSQL);
 /* Get the drivers data */
