@@ -324,11 +324,6 @@ $activeJobCount = 0;
                 <h2?>EXPERIMENTAL</h2>
                 <br />
                 <button id="btn-scan-qr" style='margin-top:20px;'>START SCANNER</button>
-                <!--
-                <a id="btn-scan-qr">
-                    <img src="https://dab1nmslvvntp.cloudfront.net/wp-content/uploads/2017/07/1499401426qr_icon.svg">
-                <a/>
-                -->
                 <canvas hidden="" id="qr-canvas"></canvas>
                 <div id="qr-result" hidden="">
                     <form name='qrscan' action='actions/qrscan.php' method="POST">
