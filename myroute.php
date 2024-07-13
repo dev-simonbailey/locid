@@ -326,7 +326,7 @@ $activeJobCount = 0;
             <th colspan='1' style='text-align:center'>
                     <p style='font-size: 24px'>
                     <?php
-                        echo $_SESSION['driver'] . " - Home";
+                        echo $_SESSION['driver'] . " - Van";
                     ?>
                     </p>
             </th>
