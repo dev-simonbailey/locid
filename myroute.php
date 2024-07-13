@@ -48,6 +48,8 @@ $activeJobCount = 0;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="src/styles.css" />
+    <script src="https://rawgit.com/sitepoint-editors/jsqrcode/master/src/qr_packed.js"></script>
     <title>LOCID | VAN</title>
     <script src="https://kit.fontawesome.com/c63864ee50.js" crossorigin="anonymous"></script>
     <style>
@@ -240,6 +242,7 @@ $activeJobCount = 0;
         <div class="tab">
             <button class="tablinks" onclick="openOptionsTab(event, 'completeJobTab')" id="defaultOpen">Complete Job</button>
             <button class="tablinks" onclick="openOptionsTab(event, 'linkJobTab')">Link Jobs</button>
+            <button class="tablinks" onclick="openOptionsTab(event, 'scanQrTab')">Scan QR</button>
         </div>
         <div id="completeJobTab" class="tabcontent">
             <form id="signature-form" action="signature.php" method="post">
@@ -316,6 +319,24 @@ $activeJobCount = 0;
                 ?>
             </table>
         </div>
+        <div id="scanQrTab" class="tabcontent">
+            <div id="container">
+                <button id="btn-scan-qr" style='margin-top:20px;'>START SCANNER</button>
+                <!--
+                <a id="btn-scan-qr">
+                    <img src="https://dab1nmslvvntp.cloudfront.net/wp-content/uploads/2017/07/1499401426qr_icon.svg">
+                <a/>
+                -->
+                <canvas hidden="" id="qr-canvas"></canvas>
+                <div id="qr-result" hidden="">
+                    <form name='qrscan' action='actions/qrscan.php' method="POST">
+                        <input id='outputData' type='text' name='scanName'/>
+                        <input id='scanJobID' type='text' name='scanJobId'/>
+                        <input type='submit' value='Complete Job' class='actionJob'/>
+                    </form>
+                </div>
+            </div> 
+        </div>
     </div>
 </div>
 <!-- END OPTION MODAL -->
@@ -346,7 +367,7 @@ $activeJobCount = 0;
         </tr>
         <tr>
             <th colspan='1' style='background-color: white;color: black;text-align:right'>
-                    <i class="fa-solid fa-arrows-rotate"></i> <span id="updated-at"><?php echo $refreshDate;?></span>
+                    <i class="fa-solid fa-arrows-rotate"></i> <span id="updated-at"></span>
             </th>
         </tr>
     </table>
@@ -478,6 +499,7 @@ $activeJobCount = 0;
         }
     console.log(jobIdString);
     document.getElementById("assignJob").value = jobIdString;
+    document.getElementById("scanJobID").value = jobIdString;
     optionsModalText.innerText = "You are completing job number(s) "+jobIdString;
     
     }
@@ -487,6 +509,7 @@ $activeJobCount = 0;
     var optionsModalText = document.getElementById("optionsModalText");
     var cancelJob = document.getElementById('cancelJob');
     var assignJob = document.getElementById('assignJob');
+    var scanJobID = document.getElementById('scanJobID');
     var updateJob = document.getElementById('updateJob');
     var optionsSpan = document.getElementById("optionsClose");
     function showOptionsModal(id) {
@@ -503,6 +526,7 @@ $activeJobCount = 0;
         });
         optionsModalText.innerText = "You are completing job number "+id;
         assignJob.value = id;
+        scanJobID.value = id;
         optionsModal.style.display = "block";
         autoRefresh = false;
         console.log("Auto Refresh Paused");
@@ -571,5 +595,6 @@ function beep() {
     snd.play();
 }
 </script>
+<script src="./src/qrCodeScanner.js"></script>
 </body>
 </html>

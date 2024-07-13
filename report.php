@@ -432,7 +432,11 @@ $customerRet = $db->query($customerSQL);
                 echo "<td>".$mainRow['completed']."</td>";
                 echo "<td>".$mainRow['sign_name']."</td>";
                 if($mainRow['signature'] != ""){
-                    echo "<td><img src='signatures/".$mainRow['signature']."' style='width:100px;height:50px;'/></td>";
+                    if($mainRow['signature'] == "qrsignature.png"){
+                        echo "<td align='center'><img src='signatures/".$mainRow['signature']."' style='width:43px;height:50px;'/></td>";
+                    } else {
+                        echo "<td><img src='signatures/".$mainRow['signature']."' style='width:100px;height:50px;'/></td>";
+                    }
                 } else {
                     echo "<td>No Signature</td>";
                 }
