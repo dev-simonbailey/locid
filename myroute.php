@@ -321,6 +321,8 @@ $activeJobCount = 0;
         </div>
         <div id="scanQrTab" class="tabcontent">
             <div id="container">
+                <h2?>EXPERIMENTAL</h2>
+                <br />
                 <button id="btn-scan-qr" style='margin-top:20px;'>START SCANNER</button>
                 <!--
                 <a id="btn-scan-qr">
@@ -330,8 +332,8 @@ $activeJobCount = 0;
                 <canvas hidden="" id="qr-canvas"></canvas>
                 <div id="qr-result" hidden="">
                     <form name='qrscan' action='actions/qrscan.php' method="POST">
-                        <input id='outputData' type='text' name='scanName'/>
-                        <input id='scanJobID' type='text' name='scanJobId'/>
+                        <input id='outputData' type='hidden' name='scanName'/>
+                        <input id='scanJobID' type='hidden' name='scanJobId'/>
                         <input type='submit' value='Complete Job' class='actionJob'/>
                     </form>
                 </div>
