@@ -62,6 +62,8 @@ $depotRet = $db->query($depotSQL);
     <link rel="manifest" href="/site.webmanifest">
     <title>LOCID | DASHBOARD</title>
     <script src="https://kit.fontawesome.com/c63864ee50.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="src/jquery.min.js"></script>
+    <script type="text/javascript" src="src/qrcode.js"></script>
     <style>
         body {
             font-family:arial;
@@ -149,7 +151,7 @@ $depotRet = $db->query($depotSQL);
             cursor: pointer;
         }
         .settingsButton {
-            width:15%;
+            width:10%;
             height:48px;
             background-color: #00529C;
             color:white;
@@ -392,68 +394,30 @@ $depotRet = $db->query($depotSQL);
 </div>
 <!-- END ADD JOB MODAL -->
 <!-- START SETTINGS MODAL -->
-<div id="settingsModal" class="modal">
+<div id="qrModal" class="modal">
     <div class="modal-content">
-        <span id='settingsClose' class="modalClose">&times;</span>
+        <span id='qrClose' class="modalClose">&times;</span>
         <div class='main-box'>
-        <center>
-        <form name='update-settings' action='update_settings.php' method='POST'>
-            <table width='80%'>
-                <tr><th><h2>Update Settings</h2></th></tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td>Depots</td></tr>
-                <tr>
-                    <td>
-                        <select class='textboxes' name='depot'>
-                        <?php 
-                            while( $depotRow = $depotRet->fetchArray( SQLITE3_ASSOC ) ) {
-                                if( $depotRow['depot'] == $_SESSION['depot']){
-                                    echo "<option value='".$depotRow['depot']."' selected>".$depotRow['depot']."</option>";
-                                } else {
-                                    echo "<option value='".$depotRow['depot']."'>".$depotRow['depot']."</option>";
-                                }
-                            }
-                        ?>
-                            <option value='Woodwards'>Woodwards</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td>Job Type</td></tr>
-                <tr><td>
-                    <select class='textboxes' name='type'>
-                        <option value='Delivery'>Delivery</option>
-                        <option value='Collection'>Collection</option>
-                        <option value='ICT'>Meet</option>
-                    </select>
-                </td></tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td>Customer/Supplier</td></tr>
-                <tr><td><input class='textboxes' name='company' type='text'></td></tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td>Location</td></tr>
-                <tr><td><input class='textboxes' name='location' type='text'/></td></tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td>Document ID</td></tr>
-                <tr><td><input class='textboxes' name='docid' type='text'/></td></tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td>Status</td></tr>
-                <tr><td>
-                        <select class='textboxes' name='status'>
-                        <?php
-                                while( $statusRow1 = $statusRet->fetchArray( SQLITE3_ASSOC ) ) {
-                                    echo "<option value='".$statusRow1['status']."'>".$statusRow1['status']."</option>";     
-                                }
-                            ?>
-                        </select>
-                    </td>
-                 </tr>
-                <tr><td>&nbsp;</td></tr>
-                <tr><td><input class='addJobButton' type='submit' value='Update Settings'></td></tr>
-            </table>
-        </form>
-    </center>
-    </div>
+            <center>
+                <div style='text-align:left'>
+                    <h3>QR Code Generator</h3>
+                    <h4>Instructions</h4>
+                    <ol>
+                        <li>Enter the text you want to appear in the QR Code, in the box below</li>
+                        <li>Press the 'Generate QR Code' button</li>
+                        <li>Right click on the generated QR Code</li>
+                        <li>Select 'Save Image As'</li>
+                        <li>Select the location on your computer and give the qr code image a name (use .png). e.g. myqrcode.png</li>
+                    </ol>
+                </div>
+                <div style='margin-top:20px'>
+                    <input id="text" type="text" value="https://www.locid.co.uk" style="width:100%;height:32px;font-size:28px;border:2px solid black" onfocus="this.value=''"/>
+                    <div id='qrcodebutton' style='margin-top:20px'><button class='addJobButton' onclick='javascript:makeCode();' style='width:60%'>Generate QR Code</button></div>
+                    <div id="qrcode" style="width:100px; height:100px; border: 2px solid black;border-radius:10px;padding:20px;margin-top:20px;"></div>
+                    <div id='qrcreated' style='margin-top:20px'></div>
+                </div>
+            </center>
+        </div>
     </div>
 </div>
 <!-- END SETTINGS MODAL -->
@@ -497,13 +461,14 @@ $depotRet = $db->query($depotSQL);
 <div class='sticky'>
     <table id='header' cellspacing='0'>
         <tr>
-            <th colspan='4' style='text-align:center'>
+            <th style='text-align:center'>
                 <button class='settingsButton' onclick='javascript:showAddJobModal()' title='Add Job'><i class="fa-solid fa-plus"></i></button>
                 <a href='dashboard.php'><button class='settingsButton' title='Refresh Data'><i class="fa-solid fa-arrows-rotate"></i></button></a>
                 <a href='report.php'><button class='settingsButton' title='View Completed Reports'><i class="fa-solid fa-chart-bar"></i></button></a>
+                <button class='settingsButton' onclick='javascript:showQrModal()' title='Create QR Code'><i class="fa-solid fa-qrcode"></i></button>
                 <button class='settingsButton' onclick='javascript:showAccountModal()' title='Login / Log Out'><i class="fa-solid fa-user"></i></button>
             </th>
-            <th colspan='6' style='text-align:center'>
+            <th style='text-align:center'>
             <?php
                     if($_SESSION['user'] != ""){
                         echo "<h2>North West Trucks | Dashboard (".$_SESSION['user'].")</h2>";
@@ -512,7 +477,7 @@ $depotRet = $db->query($depotSQL);
                     }
                 ?>
             </th>
-            <th colspan='2' style='text-align:center'>
+            <th style='text-align:center'>
                 Jobs Total: <button style='height:32px;width:32px;border-radius:50%;border:1px solid white'><strong><?php echo $jobCount; ?></strong></button>
                 &nbsp;&nbsp;&nbsp;
                 Last Updated at: <span id="updated-at"></span>
@@ -721,15 +686,15 @@ $depotRet = $db->query($depotSQL);
     }
 
     // SETTINGS MODAL - NOT IN USE AT PRESENT
-    var settingsModal = document.getElementById("settingsModal");
-    var settingsClose = document.getElementById("settingsClose");
-    function showSettingsModal() {
-        settingsModal.style.display = "block";
+    var qrModal = document.getElementById("qrModal");
+    var qrClose = document.getElementById("qrClose");
+    function showQrModal() {
+        qrModal.style.display = "block";
         autoRefresh = false;
         console.log("Auto Refresh Paused");
     }     
-    settingsClose.onclick = function() {
-        settingsModal.style.display = "none";
+    qrClose.onclick = function() {
+        qrModal.style.display = "none";
         autoRefresh = true;
         console.log("Auto Refresh Active");
     }
@@ -748,6 +713,29 @@ $depotRet = $db->query($depotSQL);
         console.log("Auto Refresh Active");
     }
     window.scrollTo(0,document.body.scrollHeight);
+
+    var qrCreated = document.getElementById('qrcreated');
+    var qrcode = new QRCode(document.getElementById("qrcode"), {
+        width : 100,
+        height : 100
+    });
+    // QR Code Generator
+    function makeCode () {		
+        var elText = document.getElementById("text");
+        
+        if (!elText.value) {
+            alert("Input a text");
+            elText.focus();
+            return;
+        }
+        
+        qrcode.makeCode(elText.value);
+        if(elText.value != "https://www.locid.co.uk"){
+            qrCreated.innerHTML = "<h3>QR Code Created for:<br /> "+elText.value+"</h3>";
+        }
+    }
+
+    makeCode();
 </script>
 </body>
 </html>
